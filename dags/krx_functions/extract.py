@@ -20,12 +20,14 @@ def get_krx_data(): #pykrx 라이브러리로 오늘의 반도체 종목 종가�
     today = pendulum.now("Asia/Seoul") #오늘 날짜 선언
     today_date = today.strftime("%Y%m%d") #오늘 날짜를 문자열로 변환
     i = 1 #주식 시장 기준으로 전날과 전전날을 찾기 위한 indicator
+    yesterday = None #주식 시장 기준 전날 날짜의 pendulum 값
     yesterday_date = None #주식 시장 기준 전날 날짜
     day_before_yesterday_date = None #주식 시장 기준 전전날 날짜
     while not yesterday_date or not day_before_yesterday_date: #전날과 전전날을 찾을 때까지 반복문 실행
         subtract_date = today.subtract(days = i) #오늘 날짜부터 i일 전의 날짜
         if subtract_date.weekday() < 5: #i일 전의 날이 주중이면 실행
             if not yesterday_date: #전날 날짜 값이 비어 있으면
+                yesterday = subtract_date
                 yesterday_date = subtract_date.strftime("%Y%m%d")
                 i += 1 #전전날을 찾기 위해서 i+1 실행
                 continue
@@ -50,17 +52,11 @@ def get_krx_data(): #pykrx 라이브러리로 오늘의 반도체 종목 종가�
         today_stock_df["종가 변화율"] = ((today_stock_df["종가"] - today_stock_df["전일 종가"]) / today_stock_df["전일 종가"]) * 100
         #반도체 관련 종목의 평균 종가 변화율 계산을 위해 avg_change_ratio에 값을 더함
         avg_change_ratio += today_stock_df["종가 변화율"]
-        #오늘 날짜에 해당하는 열만 추출
-        today_row = today_stock_df.loc[today.date()]
-        #오늘 날짜 데이터만 종목 별 주가 데이터에 모으기
-        per_stock_data[stock_name] = today_row
+        per_stock_data[stock_name] = today_stock_df
 
     #반도체 종목의 전체 평균 구하기
     avg_change_ratio /= len(stocks)
-    #종목 전체 평균을 각 종목 별 df에 추가
-    for stock_name in stocks.keys():
-        per_stock_data[stock_name]["평균 종가 변화율"] = avg_change_ratio
 
-    return per_stock_data
+    return per_stock_data, avg_change_ratio
 
 
