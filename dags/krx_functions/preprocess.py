@@ -25,5 +25,6 @@ def preprocess_krx_data(data):
 
         latest_df = df.loc[data["yesterday"].strftime("%Y%m%d")].to_dict() #전날 데이터만 추출
         latest_df['평균 종가 변화율'] = data["avg_change_ratio"] #전날 데이터에 평균 종가 변화율 추가
+        latest_df["날짜"] = data["yesterday"].strftime("%Y%m%d") #전날 데이터에 날짜 추가
         latest_per_stock_dict[stock_name] = latest_df #가장 최근 data만 dict에 저장
     return latest_per_stock_dict #dict 반환
