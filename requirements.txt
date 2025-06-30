@@ -1,1 +1,4 @@
 apache-airflow~=3.0.2
+pykrx
+pandas
+scikit-learn
