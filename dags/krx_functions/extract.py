@@ -51,12 +51,11 @@ def get_krx_data(): #pykrx 라이브러리로 오늘의 반도체 종목 종가�
         #종가 변화량 계산하여 column값 추가
         today_stock_df["종가 변화율"] = ((today_stock_df["종가"] - today_stock_df["전일 종가"]) / today_stock_df["전일 종가"]) * 100
         #반도체 관련 종목의 평균 종가 변화율 계산을 위해 avg_change_ratio에 값을 더함
-        avg_change_ratio += today_stock_df.loc[yesterday.date(), "종가 변화율"]
+        avg_change_ratio += today_stock_df.loc[yesterday_date, "종가 변화율"]
         per_stock_data[stock_name] = today_stock_df #수집 완료한 df를 dict에 추가
 
     #반도체 종목의 전체 평균 구하기
     avg_change_ratio /= len(stocks)
-
-    return per_stock_data, avg_change_ratio, yesterday
+    return {"per_stock_data": per_stock_data, "avg_change_ratio": avg_change_ratio, "yesterday": yesterday}
 
 
