@@ -26,6 +26,7 @@ create_krx_table = SQLExecuteQueryOperator( #krx_table이 없을 경우 db에 kr
             "종가 변화율" NUMERIC NOT NULL,
             "거래량 변화량" NUMERIC NOT NULL,
             "평균 종가 변화율" NUMERIC NOT NULL,
+            "뉴스 점수" NUMERIC NOT NULL,
             "다음날 종가 변화율" NUMERIC NOT NULL
         );
     """,
@@ -40,9 +41,9 @@ def insert_krx_table(data): #새로 생성된 데이터를 추가하는 task
     #종목 별로 순회하면서 db에 new data(yesterday) insert
     for stock_name, stock_info in data.items():
         cur.execute("""
-            INSERT INTO krx_table ("종목", "날짜", "종가 변화율", "거래량 변화량", "평균 종가 변화율", "다음날 종가 변화율")
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (stock_name, stock_info["날짜"], stock_info["종가 변화율"], stock_info["거래량 변화량"], stock_info["평균 종가 변화율"], stock_info["다음날 종가 변화율"])
+            INSERT INTO krx_table ("종목", "날짜", "종가 변화율", "거래량 변화량", "평균 종가 변화율", "뉴스 점수", "다음날 종가 변화율")
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (stock_name, stock_info["날짜"], stock_info["종가 변화율"], stock_info["거래량 변화량"], stock_info["평균 종가 변화율"], 0, stock_info["다음날 종가 변화율"])
     )
     #변경상태 커밋
     conn.commit()
