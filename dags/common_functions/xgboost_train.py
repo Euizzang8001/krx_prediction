@@ -7,7 +7,7 @@ import boto3
 import joblib
 import io
 import pandas as pd
-from xgboost import XGBRegressor
+from xgboost_train import XGBRegressor
 from dotenv import load_dotenv
 
 stocks = { #반도체 관련 주식 종목 dict
