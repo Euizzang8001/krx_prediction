@@ -2,3 +2,7 @@ apache-airflow~=3.0.2
 pykrx
 pandas
 scikit-learn
+boto3
+xgboost
+joblib
+python-dotenv
