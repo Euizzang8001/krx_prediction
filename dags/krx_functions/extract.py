@@ -18,7 +18,7 @@ stocks = { #반도체 관련 주식 종목 dict
 @task
 def get_krx_data(): #pykrx 라이브러리로 오늘의 반도체 종목 종가를 얻는 함수
     today = pendulum.now("Asia/Seoul") #오늘 날짜 선언
-    #today = pendulum.datetime(2025, 6, 30) #test용
+    #today = pendulum.datetime(2025, 7, 1) #test용
     yesterday = None #주식 시장 기준 전날 날짜의 pendulum 값
 
     i = 1  # 주식 시장 기준으로 전날과 전전날을 찾기 위한 indicator

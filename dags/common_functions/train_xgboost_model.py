@@ -7,7 +7,7 @@ import boto3
 import joblib
 import io
 import pandas as pd
-from xgboost_train import XGBRegressor
+from xgboost import XGBRegressor
 from dotenv import load_dotenv
 
 stocks = { #반도체 관련 주식 종목 dict
@@ -97,12 +97,12 @@ def train_xgboost_model():
 
             # 새로 훈련시킬 데이터 처리
             new_X = pd.DataFrame([{
-                "종가 변화율": float(row[2]),
-                "거래량 변화량": float(row[3]),
-                "평균 종가 변화율": float(row[4]),
-                "뉴스 점수": float(row[5]),
+                "종가 변화율": float(row[3]),
+                "거래량 변화량": float(row[4]),
+                "평균 종가 변화율": float(row[5]),
+                "뉴스 점수": float(row[6]),
             }])
-            new_y = pd.Series([float(row[6])])
+            new_y = pd.Series([float(row[9])])
 
             # s3로부터 past_model(수정x되는 모델) 가져오기
             response = s3_client.get_object(Bucket=bucket_name, Key=f"models/{stock_name}_past_model.json")
