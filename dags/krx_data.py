@@ -5,7 +5,8 @@ from krx_functions.extract import get_krx_data
 from krx_functions.preprocess import preprocess_krx_data
 from krx_functions.load import create_krx_table, insert_krx_table
 
-from common_functions.xgboost_train import train_xgboost_model
+from common_functions.train_xgboost_model import train_xgboost_model
+from common_functions.predict_next_closing import predict_by_xgboost_model
 
 @dag( #dag 정의
     dag_id="krx_prediction", #dag id 설정
@@ -27,6 +28,6 @@ from common_functions.xgboost_train import train_xgboost_model
 def krx_prediction(): #dag 실행 함수 정의
     get_krx_dag = get_krx_data()
     preprocess_krx_dag = preprocess_krx_data(get_krx_dag)
-    get_krx_dag >> preprocess_krx_dag >> create_krx_table >> insert_krx_table(preprocess_krx_dag) >> train_xgboost_model()
+    get_krx_dag >> preprocess_krx_dag >> create_krx_table >> insert_krx_table(preprocess_krx_dag) >> train_xgboost_model() >> predict_by_xgboost_model()
 
 dag = krx_prediction()
