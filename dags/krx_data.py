@@ -9,17 +9,18 @@ from common_functions.train_xgboost_model import train_xgboost_model
 from common_functions.predict_next_closing import predict_by_xgboost_model
 
 from news_functions.extract import get_news_data
-from news_functions.load import load_news_data, create_news_table
+from news_functions.load import load_news_data
+from news_functions.get_news_score import get_news_score
 @dag( #dag 정의
     dag_id="krx_prediction", #dag id 설정
     schedule = timedelta(hours=24), #반복 주기 설정
     #시작 날짜 설정
     start_date=pendulum.datetime(
-        2021,
-        12,
-        31,
-        16,
-        30,
+        2025,
+        7,
+        1,
+        15,
+        40,
         0,
         0,
         "Asia/Seoul"),
@@ -32,14 +33,9 @@ def krx_prediction(): #dag 실행 함수 정의
     preprocess_krx_dag = preprocess_krx_data(get_krx_dag)
     insert_krx_table_dag = insert_krx_table(preprocess_krx_dag)
 
-    get_news_dag = get_news_data()
-    load_news_dag = load_news_data(get_news_dag)
-
     train_xgboost_model_dag = train_xgboost_model()
     predict_next_closing_dag = predict_by_xgboost_model()
 
-    get_krx_dag >> preprocess_krx_dag >> create_krx_table >> insert_krx_table_dag >> train_xgboost_model_dag
-    get_news_dag >> create_news_table >> load_news_dag >> train_xgboost_model_dag
-    train_xgboost_model_dag >> predict_next_closing_dag
+    get_krx_dag >> preprocess_krx_dag >> create_krx_table >> insert_krx_table_dag >> train_xgboost_model_dag >> predict_next_closing_dag
 
 dag = krx_prediction()
