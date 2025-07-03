@@ -131,7 +131,7 @@ def predict_by_xgboost_model():
                     UPDATE krx_table
                     SET "예측된 종가" = %s, "예측된 종가 변화율" = %s
                     WHERE 종목 = %s AND 날짜 = %s;
-                """, ((1 + predict_result) * predicting_day_closing, predict_result, stock_name, predicting_day.strftime('%Y%m%d'))
+                """, ((100 + predict_result) / 100  * predicting_day_closing, predict_result, stock_name, predicting_day.strftime('%Y%m%d'))
             )
 
             print(f"{stock_name}의 {predicting_day.strftime('%Y%m%d')} 이후 예측된 종가", (1 + predict_result) * float(row[0]))
