@@ -6,3 +6,6 @@ boto3
 xgboost
 joblib
 python-dotenv
+openai
+pymongo
+apache-airflow-providers-mongo
