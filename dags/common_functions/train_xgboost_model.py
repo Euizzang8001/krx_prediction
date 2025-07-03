@@ -125,7 +125,7 @@ def train_xgboost_model():
                     ContentType='application/json'
                 )
 
-            if today.hour == 15 and today.minute == 30:
+            if today.hour == 15 and today.minute >= 30:
                 with open(local_path, "rb") as f:
                     s3_client.put_object(
                         Bucket=bucket_name,
