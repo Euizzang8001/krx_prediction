@@ -125,6 +125,15 @@ def train_xgboost_model():
                     ContentType='application/json'
                 )
 
+            if today.hour == 15 and today.minute == 30:
+                with open(local_path, "rb") as f:
+                    s3_client.put_object(
+                        Bucket=bucket_name,
+                        Key=f"models/{stock_name}_past_model.json",
+                        Body=f.read(),
+                        ContentType='application/json'
+                    )
+
             print(f" {stock_name} model updates successfully")
 
         except Exception as e: #에러 발생시 종목과 에러 표시하도록 설정
