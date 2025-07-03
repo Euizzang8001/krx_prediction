@@ -35,8 +35,10 @@ def get_news_data():
 
         #지금 시간 가져오기
         now = pendulum.now('Asia/Seoul')
-        check_hour = now.hour - 1 if now.hour > 0 else 23
+        check_time = now.subtract(hours=1)
+        check_hour = check_time.hour
 
+        #뉴스의 데이터를 각각 list로 저장
         titles = []
         links = []
         descriptions = []
@@ -57,7 +59,8 @@ def get_news_data():
                 break
             else:
                 continue
-        return {"titles": titles, "links": links, "descriptions": descriptions, "pub_times": pub_times}
+        print("News Data Extracted")
+        return {"titles": titles, "links": links, "descriptions": descriptions, "pub_times": pub_times, "check_time":check_time.strftime("%Y-%m-%d %H")}
 
     except Exception as e:
         print(e)
