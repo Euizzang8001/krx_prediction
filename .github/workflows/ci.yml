@@ -5,15 +5,14 @@ on:
     branches: ["main"]
 
 jobs:
-    build:
-      runs-on: self-hosted
-      steps:
-        - name: Set up .env FILE
-          run: |
-            echo "$ENV_FILE" >> .env
-          env:
-            ENV_FILE: ${{ secrets.ENV_FILE }}
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-        - name: Docker Compose
-          uses: actions/checkout@v3
-          run: docker compose up -d
+      - name: Set up .env file
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Start services using Docker Compose
+        run: docker compose up -d --remove-orphans
