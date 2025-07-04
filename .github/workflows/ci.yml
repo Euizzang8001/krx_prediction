@@ -8,5 +8,12 @@ jobs:
     build:
       runs-on: self-hosted
       steps:
-        - uses: actions/checkout@v3
-        - run: docker compose up -d
+        - name: Set up .env FILE
+          run: |
+            echo "$ENV_FILE" >> .env
+          env:
+            ENV_FILE: ${{ secrets.ENV_FILE }}
+
+        - name: Docker Compose
+          uses: actions/checkout@v3
+          run: docker compose up -d
