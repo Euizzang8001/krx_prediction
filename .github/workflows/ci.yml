@@ -28,8 +28,8 @@ jobs:
 
       - name: Build and push all services defined in docker-compose.yml
         run: |
-          docker compose build
-          docker compose push
+          docker-compose build
+          docker-compose push
 
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.0
@@ -42,8 +42,8 @@ jobs:
             cd ~/krx_prediction
             git pull origin main
             echo "${{ secrets.ENV_FILE }}" > .env
-            docker compose pull
-            docker compose up -d --remove-orphans
+            docker-compose pull
+            docker-compose up -d --remove-orphans
 
       - name: Done
         run: echo "EC2 deployment complete"
