@@ -28,8 +28,8 @@ jobs:
 
       - name: Build and push all services defined in docker-compose.yml
         run: |
-          docker-compose build
-          docker-compose push
+          docker compose build
+          docker compose push
 
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.0
