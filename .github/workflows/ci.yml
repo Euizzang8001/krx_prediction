@@ -13,6 +13,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Set up .env FILE
+        run: |
+          echo "$ENV_FILE" >> .env
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
