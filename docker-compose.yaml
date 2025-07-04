@@ -55,7 +55,6 @@ x-airflow-common:
     - .env #docker-compose.yaml이 있는 폴더에 있는 .env 파일 가져오기
   environment:
     &airflow-common-env
-    AIRFLOW_UID: 5252
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow

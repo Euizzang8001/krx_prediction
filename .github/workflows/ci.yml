@@ -1,49 +1,131 @@
-name: KRX Prediction CI
+name: Initialization and Deployment Workflow
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
 
 jobs:
-  build:
+  initialization:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Initial Server Setup
+        uses: appleboy/ssh-action@master
+        with:
+          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          script: |
+            if [ ! -f /home/${{ secrets.EC2_USER }}/.setup_done ]; then
+              echo "⭐️ Git 설정"
+              git config --global user.name "Euizzang8001"
+              git config --global user.email "qkrdmlcks55@korea.ac.kr"
+
+              echo "⭐️ Miniconda 설치"
+              wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+              bash Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda
+              echo "export PATH=\"$HOME/miniconda/bin:\$PATH\"" >> ~/.bashrc
+              source ~/.bashrc
+              source $HOME/miniconda/etc/profile.d/conda.sh
+              conda create -n airflow-practice python=3.11 -y
+              conda activate airflow-practice
+              pip install poetry
+              pip install pre-commit
+              conda install pandas
+              conda deactivate
+
+              echo "⭐️ 시스템 업데이트 및 PostgreSQL 설치"
+              sudo apt update && sudo apt -y upgrade
+              sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+              wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+              sudo apt-get update -y
+              sudo apt-get -y install postgresql-14 apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+
+              echo "⭐️ Docker 설치 및 Docker 권한 부여"
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+              sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+              sudo apt-get update -y
+              sudo apt-get -y install docker-ce docker-ce-cli containerd.io
+              sudo usermod -aG docker ${{ secrets.EC2_USER }}
+              sudo chmod 666 /var/run/docker.sock
+              sudo systemctl restart docker
+              sudo service docker restart
+
+              echo "⭐️ docker compose 설치"
+              sudo apt -y install docker-compose
+
+              echo "⭐️ SSH 키 생성 및 GitHub에 등록"
+              if [ ! -f ~/.ssh/id_rsa ]; then
+                ssh-keygen -t rsa -b 4096 -C "qkrdmlcks55@korea.ac.kr" -f ~/.ssh/id_rsa -N ""
+              fi
+              ssh-keyscan github.com >> ~/.ssh/known_hosts
+              PUBLIC_KEY=$(cat ~/.ssh/id_rsa.pub)
+              curl -H "Authorization: token ${{ secrets.TOKEN }}" \
+                  -X POST \
+                  -d "{\"title\":\"airflow\",\"key\":\"$PUBLIC_KEY\"}" \
+                  https://api.github.com/user/keys
+
+              echo "⭐️ Astronomer 설치 및 Airflow 시작"
+              curl -sSL install.astronomer.io | sudo bash -s -- v1.25.0 
+              git clone git@github.com:Euizzang8001/krx_prediction.git
+              cd airflow-practice
+              touch .env
+              astro dev start 2>astro_error.log &
+              sleep 60
+
+              echo "⭐️ 에러 로그에서 포트 사용 중 에러가 있는지 확인"
+              if grep -q "bind: address already in use" astro_error.log; then
+                echo "‼️ 포트 5432가 이미 사용 중입니다. Astro 프로세스를 종료합니다."
+                pkill astro
+                sudo systemctl stop postgresql
+              fi
+              pkill astro
+              astro dev stop && astro dev kill
+
+              echo "⭐️ airflow plugins 폴더 권한 변경 완료"
+              sudo chown ubuntu plugins
+              sudo chgrp ubuntu plugins
+
+              echo "⭐️ conda 환경 변수 적용 완료"
+              conda init
+              source ~/.bashrc
+
+              echo "⭐️ 설정 완료"
+              touch /home/${{ secrets.EC2_USER }}/.setup_done
+            else
+              echo "⭐️ Already Initialized"
+            fi
+
+  deployment:
+    runs-on: ubuntu-latest
+    needs: initialization
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
       - name: Set up .env FILE
         run: echo "$ENV_FILE" > .env
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+      - name: Deploy Application
+        # env:
+        #   REPOSITORY_NAME: ${{ github.event.repository.name }}
+        uses: appleboy/ssh-action@master
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and push all services defined in docker-compose.yml
-        run: |
-          docker compose build
-          docker compose push
-
-      - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v1.0.0
-        with:
+          key: ${{ secrets.EC2_SSH_KEY }}
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
           script: |
-            cd ~/krx_prediction
+            cd
+            CURRENT_DIR=$(pwd)
+            cd $CURRENT_DIR/${{ vars.repository_name }}
+            echo "현재 위치: $(pwd)"
             git pull origin main
-            echo "${{ secrets.ENV_FILE }}" > .env
-            docker-compose pull
-            docker-compose up -d --remove-orphans
-
-      - name: Done
-        run: echo "EC2 deployment complete"
+            echo "⭐️ 배포 완료"
+            # 추가적인 배포 명령어들
