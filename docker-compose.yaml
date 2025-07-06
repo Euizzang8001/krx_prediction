@@ -91,6 +91,7 @@ x-airflow-common:
 services:
   postgres:
     image: postgres:13
+    mem_limit: 512m
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
@@ -108,6 +109,7 @@ services:
     # Redis is limited to 7.2-bookworm due to licencing change
     # https://redis.io/blog/redis-adopts-dual-source-available-licensing/
     image: redis:7.2-bookworm
+    mem_limit: 512m
     expose:
       - 6379
     healthcheck:
@@ -121,6 +123,7 @@ services:
   airflow-apiserver:
     <<: *airflow-common
     command: api-server
+    mem_limit: 512m
     ports:
       - "8080:8080"
     healthcheck:
@@ -138,6 +141,7 @@ services:
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
+    mem_limit: 512m
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
       interval: 30s
@@ -153,6 +157,7 @@ services:
   airflow-dag-processor:
     <<: *airflow-common
     command: dag-processor
+    mem_limit: 512m
     healthcheck:
       test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
       interval: 30s
@@ -168,6 +173,7 @@ services:
   airflow-worker:
     <<: *airflow-common
     command: celery worker
+    mem_limit: 512m
     healthcheck:
       # yamllint disable rule:line-length
       test:
@@ -193,6 +199,7 @@ services:
   airflow-triggerer:
     <<: *airflow-common
     command: triggerer
+    mem_limit: 512m
     healthcheck:
       test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
       interval: 30s
@@ -209,6 +216,7 @@ services:
     <<: *airflow-common
     entrypoint: /bin/bash
     # yamllint disable rule:line-length
+    mem_limit: 512m
     command:
       - -c
       - |
@@ -299,6 +307,7 @@ services:
 
   airflow-cli:
     <<: *airflow-common
+    mem_limit: 512m
     profiles:
       - debug
     environment:
@@ -333,15 +342,6 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
-
-  airflow-python:
-    <<: *airflow-common
-    profiles:
-      - debug
-    environment:
-      <<: *airflow-common-env
-    user: "50000:0"
-    entrypoint: [ "/bin/bash", "-c" ]
 
 volumes:
   postgres-db-volume:
