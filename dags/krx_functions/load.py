@@ -38,6 +38,9 @@ create_krx_table = SQLExecuteQueryOperator( #krx_table이 없을 경우 db에 kr
 
 @task
 def insert_krx_table(data): #새로 생성된 데이터를 추가하는 task
+    #오늘이 주말이라면 실행 안함
+    if data["today"].weekday() >= 5:
+        return None
     pg_hook = PostgresHook(postgres_conn_id='krx_conn') #postgresql 연결 훅
     conn = pg_hook.get_conn() #훅으로 postgresql 연결
     cur = conn.cursor() #커서 설정

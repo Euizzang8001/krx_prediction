@@ -20,7 +20,10 @@ def preprocess_krx_data(data): #yesterday에 해당하는 다음날 종가 변�
     per_stock_dict = {} # XGBoost 모델 훈련을 위하여 가장 최근 data(전날)만 저장하는 dict선언
 
     avg_closing_change_ratio = 0
-
+ 
+    #오늘이 주말이라면, 실행 안함
+    if data["today"].weekday() >= 5:
+        return {"today": data["today"]}
 
     for stock_name in stocks.keys(): #종목 별 조회
         df = data["per_stock_data"][stock_name] #종목 별 전전날, 전날, 오늘 데이터

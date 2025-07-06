@@ -89,7 +89,7 @@ def get_news_score(data):
                 break
         i += 1  # 전날을 아직 못 찾았으므로 i + 1
 
-    predicting_day = today if today.hour >= 16 else yesterday #16시가 넘으면 -> 오늘 종가로 예측, 안 넘으면 -> 어제 종가로 오늘의 종가를 예측
+    predicting_day = today if today.hour >= 16 and today.weekday() < 5 else yesterday #16시가 넘었고, 주중이라면 -> 오늘 종가로 예측, 안 넘으면 -> 어제 종가로 오늘의 종가를 예측
     news_count = len(data['titles']) #이번 구간동안의 전체 뉴스의 수
 
     #각 종목 별로 누적합 된 뉴스 점수 및 뉴스의 수 업데이트
