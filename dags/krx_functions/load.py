@@ -15,27 +15,6 @@ stocks = { #반도체 관련 주식 종목 dict
     "원익IPS": ["240810", "20160502"]
 }
 
-create_krx_table = SQLExecuteQueryOperator( #krx_table이 없을 경우 db에 krx_table을 만드는 operator
-    task_id='create_krx_table', #task_id
-    conn_id='krx_conn', #conn_id
-    #실행하려는 sql 명령문
-    sql=""" 
-        CREATE TABLE IF NOT EXISTS krx_table (
-            "종목" varchar(20) NOT NULL,
-            "날짜" varchar(20) NOT NULL,
-            "종가" NUMERIC NOT NULL,
-            "종가 변화율" NUMERIC NOT NULL,
-            "거래량 변화량" NUMERIC NOT NULL,
-            "평균 종가 변화율" NUMERIC NOT NULL,
-            "뉴스 점수" NUMERIC NOT NULL,
-            "예측된 종가" NUMERIC,
-            "예측된 종가 변화율" NUMERIC,
-            "다음날 종가 변화율" NUMERIC,
-            "뉴스 수" NUMERIC
-        );
-    """,
-)
-
 @task
 def insert_krx_table(data): #새로 생성된 데이터를 추가하는 task
     #오늘이 주말이라면 실행 안함

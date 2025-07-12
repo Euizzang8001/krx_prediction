@@ -3,7 +3,7 @@ import pendulum
 from datetime import datetime, timedelta
 from krx_functions.extract import get_krx_data
 from krx_functions.preprocess import preprocess_krx_data
-from krx_functions.load import create_krx_table, insert_krx_table
+from krx_functions.load import insert_krx_table
 
 from common_functions.train_xgboost_model import train_xgboost_model
 from common_functions.predict_next_closing import predict_by_xgboost_model
@@ -36,6 +36,6 @@ def krx_prediction(): #dag 실행 함수 정의
     train_xgboost_model_dag = train_xgboost_model()
     predict_next_closing_dag = predict_by_xgboost_model()
 
-    get_krx_dag >> preprocess_krx_dag >> create_krx_table >> insert_krx_table_dag >> train_xgboost_model_dag >> predict_next_closing_dag
+    get_krx_dag >> preprocess_krx_dag >> insert_krx_table_dag >> train_xgboost_model_dag >> predict_next_closing_dag
 
 dag = krx_prediction()
