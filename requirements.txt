@@ -9,3 +9,4 @@ python-dotenv
 openai
 pymongo
 apache-airflow-providers-mongo
+certifi

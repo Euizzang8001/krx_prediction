@@ -90,15 +90,15 @@ def get_news_score(data):
                 break
         i += 1  # 전날을 아직 못 찾았으므로 i + 1
 
-    predicting_day = today if today.hour >= 16 and today.weekday() < 5 else yesterday #16시가 넘었고, 주중이라면 -> 오늘 종가로 예측, 안 넘으면 -> 어제 종가로 오늘의 종가를 예측
+    predicting_day = yesterday if (today.weekday() < 5 and today.hour <16) or today.weekday() >= 5 else today #16시가 넘었고, 주중이라면 -> 오늘 종가로 예측, 안 넘으면 -> 어제 종가로 오늘의 종가를 예측
     news_count = len(data['titles']) #이번 구간동안의 전체 뉴스의 수
 
     #각 종목 별로 누적합 된 뉴스 점수 및 뉴스의 수 업데이트
     for stock_name, news_score in zip(stocks.keys(), score_sum_list):
         cur.execute("""
                 UPDATE stocks
-                SET "news_score" = (("news_score" * "news_num") + %s)/("news_num" + %s) , "news_num" = "news_num" + %s
-                WHERE "date" = %s and "name" = %s
+                SET news_score = ((news_score * news_num) + %s)/(news_num + %s) , news_num = news_num + %s
+                WHERE date = %s and name = %s
             """, (news_score, news_count, news_count, predicting_day.strftime("%Y%m%d"), stock_name)
         )
     #DB 변경 사항 커밋

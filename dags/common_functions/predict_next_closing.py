@@ -60,7 +60,7 @@ def predict_by_xgboost_model():
     #predicting_day: 예측에 사용할 날짜(다음날 주가 변화율이 없는 최신 데이터)
     trained_day, training_day, predicting_day = None, None, None
 
-    if today.hour <16 and today.weekday() < 5: #주식 시장 종료 이전 + 주중이라면 -> 예측할 종가 날짜: today, 예측에 사용될 날짜: yesterday,
+    if (today.weekday() < 5 and today.hour <16) or today.weekday() >= 5 : #주식 시장 종료 이전 + 주중이거나 주말이라면 -> 예측할 종가 날짜: today, 예측에 사용될 날짜: yesterday,
         # 뉴스 점수 없데이트할 날짜: day_before_yesterday, 구현된 최종 모델: day_before_before_yesterday
         trained_day = day_before_before_yesterday
         training_day = day_before_yesterday
@@ -129,7 +129,7 @@ def predict_by_xgboost_model():
             cur.execute(
                 """
                     UPDATE stocks
-                    SET "predicted_closing" = %s, "predicted_closing_ratio" = %s
+                    SET predicted_closing = %s, predicted_closing_ratio = %s
                     WHERE name = %s AND date = %s;
                 """, ((100 + predict_result) / 100  * predicting_day_closing, predict_result, stock_name, predicting_day.strftime('%Y%m%d'))
             )
