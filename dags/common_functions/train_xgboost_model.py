@@ -34,7 +34,7 @@ def train_xgboost_model():
     aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
 
     today = pendulum.now("Asia/Seoul")  # 오늘 날짜 선언
-    #today = pendulum.datetime(2025, 6, 30) #test용
+    #today = pendulum.datetime(2025, 7, 11, 16, 30, 10) #test용
     i = 1  # 주식 시장 기준으로 전날을 찾기 위한 indicator
     yesterday = None  # 주식 시장 기준 전날 날짜의 pendulum 값
     day_before_yesterday = None #주식 시장 기준 전전날 날짜
@@ -88,8 +88,8 @@ def train_xgboost_model():
         try:
             cur.execute(
                 """
-                SELECT * FROM krx_table
-                WHERE 종목 = %s AND 날짜 = %s;
+                SELECT * FROM stocks
+                WHERE 'name' = %s AND 'date' = %s;
                 """,
                 (stock_name, training_day.strftime('%Y%m%d'))
             )
@@ -97,12 +97,12 @@ def train_xgboost_model():
 
             # 새로 훈련시킬 데이터 처리
             new_X = pd.DataFrame([{
-                "종가 변화율": float(row[3]),
-                "거래량 변화량": float(row[4]),
-                "평균 종가 변화율": float(row[5]),
-                "뉴스 점수": float(row[6]),
+                "closing_changed_ratio": float(row[4]),
+                "exchanging_change": float(row[5]),
+                "semi_avg_closing_changed_ratio": float(row[6]),
+                "news_score": float(row[7]),
             }])
-            new_y = pd.Series([float(row[9])])
+            new_y = pd.Series([float(row[10])])
 
             # s3로부터 past_model(수정x되는 모델) 가져오기
             response = s3_client.get_object(Bucket=bucket_name, Key=f"models/{stock_name}_past_model.json")

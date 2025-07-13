@@ -1,9 +1,6 @@
-from airflow.sdk import dag, task
+from airflow.sdk import dag
 import pendulum
-from datetime import datetime, timedelta
-from krx_functions.extract import get_krx_data
-from krx_functions.preprocess import preprocess_krx_data
-from krx_functions.load import create_krx_table, insert_krx_table
+from datetime import timedelta
 
 from common_functions.train_xgboost_model import train_xgboost_model
 from common_functions.predict_next_closing import predict_by_xgboost_model

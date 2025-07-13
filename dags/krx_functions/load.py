@@ -27,14 +27,14 @@ def insert_krx_table(data): #새로 생성된 데이터를 추가하는 task
     #종목 별로 순회하면서 db에 new data(yesterday) insert
     for stock_name, stock_info in data["per_stock_dict"].items():
         cur.execute("""
-                INSERT INTO krx_table ("종목", "날짜", "종가", "종가 변화율", "거래량 변화량", "평균 종가 변화율", "뉴스 점수", "다음날 종가 변화율", "뉴스 수")
+                INSERT INTO stocks ("name", "date", "closing", "closing_changed_ratio", "exchanging_change", "semi_avg_closing_changed_ratio", "news_score", "next_day_closing_change_ratio", "news_num")
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (stock_name, data["today"].strftime("%Y%m%d"), stock_info["종가"] ,stock_info["종가 변화율"], stock_info["거래량 변화량"], data["avg_closing_change_ratio"], 0, None, 0)
         )
         cur.execute("""
-                UPDATE krx_table 
-                SET "다음날 종가 변화율" = %s 
-                WHERE "날짜" = %s and "종목" = %s
+                UPDATE stocks 
+                SET "next_day_closing_change_ratio" = %s 
+                WHERE "date" = %s and "name" = %s
             """, (stock_info["종가 변화율"],data["yesterday"].strftime("%Y%m%d"), stock_name)
         )
     #변경상태 커밋

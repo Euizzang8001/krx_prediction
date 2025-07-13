@@ -34,7 +34,7 @@ def predict_by_xgboost_model():
     aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
 
     today = pendulum.now("Asia/Seoul")  # 오늘 날짜 선언
-    #today = pendulum.datetime(2025, 6, 30) #test용
+    #today = pendulum.datetime(2025, 7, 11, 16, 30, 10) #test용
     i = 1  # 주식 시장 기준으로 전날을 찾기 위한 indicator
     yesterday = None  # 주식 시장 기준 전날 날짜의 pendulum 값
     day_before_yesterday = None #주식 시장 기준 전전날 날짜
@@ -88,8 +88,8 @@ def predict_by_xgboost_model():
         for stock_name in stocks.keys(): #종목 별 predicting값을 가져와 xgboost 모델로 예측하기
             cur.execute(
                 """
-                SELECT * FROM krx_table
-                WHERE 종목 = %s AND 날짜 = %s;
+                SELECT * FROM stocks
+                WHERE name = %s AND date = %s;
                 """,
                 (stock_name, predicting_day.strftime('%Y%m%d'))
             )
@@ -97,10 +97,10 @@ def predict_by_xgboost_model():
 
             # 예측 데이터 처리
             predict_x = pd.DataFrame([{
-                "종가 변화율": float(row[3]),
-                "거래량 변화량": float(row[4]),
-                "평균 종가 변화율": float(row[5]),
-                "뉴스 점수": float(row[6]),
+                "closing_changed_ratio": float(row[4]),
+                "exchanging_change": float(row[5]),
+                "semi_avg_closing_changed_ratio": float(row[6]),
+                "news_score": float(row[7]),
             }])
 
             # s3로부터 past_model(수정x되는 모델) 가져오기
@@ -117,8 +117,8 @@ def predict_by_xgboost_model():
             #전날 종가 가격 찾기
             cur.execute(
                 """
-                SELECT 종가 FROM krx_table
-                WHERE 종목 = %s AND 날짜 = %s;
+                SELECT closing FROM stocks
+                WHERE name = %s AND date = %s;
                 """,
                 (stock_name, predicting_day.strftime('%Y%m%d'))
             )
@@ -128,13 +128,13 @@ def predict_by_xgboost_model():
             #예측한 종가 변화율과 종가 계산하여 sql에 저장
             cur.execute(
                 """
-                    UPDATE krx_table
-                    SET "예측된 종가" = %s, "예측된 종가 변화율" = %s
-                    WHERE 종목 = %s AND 날짜 = %s;
+                    UPDATE stocks
+                    SET "predicted_closing" = %s, "predicted_closing_ratio" = %s
+                    WHERE name = %s AND date = %s;
                 """, ((100 + predict_result) / 100  * predicting_day_closing, predict_result, stock_name, predicting_day.strftime('%Y%m%d'))
             )
 
-            print(f"{stock_name}의 {predicting_day.strftime('%Y%m%d')} 이후 예측된 종가", (1 + predict_result) * float(row[0]))
+            print(f"{stock_name}의 {predicting_day.strftime('%Y%m%d')} 이후 예측된 종가", (100 + predict_result) / 100  * predicting_day_closing)
             print(f"{stock_name}의 {predicting_day.strftime('%Y%m%d')} 이후 예측된 종가 변화율", predict_result)
 
         #DB 변경사항 저장

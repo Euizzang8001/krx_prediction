@@ -79,6 +79,7 @@ def get_news_score(data):
         score_sum_list = [a + b for a, b in zip(score_sum_list, score_list)]
 
     today = pendulum.now("Asia/Seoul") #오늘의 시간 저장
+    #today = pendulum.datetime(2025, 7, 11, 16, 30, 10)
     yesterday = None  # 주식 시장 기준 전날 날짜의 pendulum 값
     i = 1 # 주식 시장 기준 전날 날짜를 구하기 위한 indicator설정
     while not yesterday:  # 전날을 찾을 때까지 반복문 실행
@@ -95,9 +96,9 @@ def get_news_score(data):
     #각 종목 별로 누적합 된 뉴스 점수 및 뉴스의 수 업데이트
     for stock_name, news_score in zip(stocks.keys(), score_sum_list):
         cur.execute("""
-                UPDATE krx_table
-                SET "뉴스 점수" = (("뉴스 점수" * "뉴스 수") + %s)/("뉴스 수" + %s) , "뉴스 수" = "뉴스 수" + %s
-                WHERE "날짜" = %s and "종목" = %s
+                UPDATE stocks
+                SET "news_score" = (("news_score" * "news_num") + %s)/("news_num" + %s) , "news_num" = "news_num" + %s
+                WHERE "date" = %s and "name" = %s
             """, (news_score, news_count, news_count, predicting_day.strftime("%Y%m%d"), stock_name)
         )
     #DB 변경 사항 커밋

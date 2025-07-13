@@ -1,6 +1,6 @@
 from airflow.sdk import dag, task
 import pendulum
-from datetime import datetime, timedelta
+from datetime import timedelta
 from krx_functions.extract import get_krx_data
 from krx_functions.preprocess import preprocess_krx_data
 from krx_functions.load import insert_krx_table
@@ -8,9 +8,7 @@ from krx_functions.load import insert_krx_table
 from common_functions.train_xgboost_model import train_xgboost_model
 from common_functions.predict_next_closing import predict_by_xgboost_model
 
-from news_functions.extract import get_news_data
-from news_functions.load import load_news_data
-from news_functions.get_news_score import get_news_score
+
 @dag( #dag 정의
     dag_id="krx_prediction", #dag id 설정
     schedule = timedelta(hours=24), #반복 주기 설정
