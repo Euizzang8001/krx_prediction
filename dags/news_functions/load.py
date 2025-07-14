@@ -27,8 +27,7 @@ def load_news_data(data):
         hook = MongoHook(mongo_conn_id='mongo_conn_id')
         client = hook.get_conn()
         db = client["news_db"] #news_db에 접근
-        db.create_collection(data['check_time']) #뉴스 출간 시간으로 collection 생성
-        col = db[data['check_time']] #출간 시간 collection에 접근
+        col = db["news_collection"] #news_collection에 접근
 
         #뉴스 데이터를 순회하면서 title, description, link, pub_time을 dict형식으로 collection에 저장
         for title, description, link, pub_time in zip(data['titles'], data['descriptions'], data['links'], data['pub_times']):

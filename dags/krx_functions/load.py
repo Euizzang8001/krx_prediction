@@ -29,7 +29,7 @@ def insert_krx_table(data): #새로 생성된 데이터를 추가하는 task
         cur.execute("""
                 INSERT INTO stocks ("name", "date", "closing", "closing_changed_ratio", "exchanging_change", "semi_avg_closing_changed_ratio", "news_score", "next_day_closing_change_ratio", "news_num")
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (stock_name, data["today"].strftime("%Y%m%d"), stock_info["종가"] ,stock_info["종가 변화율"], stock_info["거래량 변화량"], data["avg_closing_change_ratio"], 0, None, 0)
+            """, (stock_name, data["today"].strftime("%Y%m%d"), stock_info["종가"] ,stock_info["종가 변화율"], stock_info["거래량 변화량"], data["avg_closing_change_ratio"], 0, None, 1)
         )
         cur.execute("""
                 UPDATE stocks 
