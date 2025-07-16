@@ -19,6 +19,7 @@ from news_functions.get_news_score import get_news_score
         16,
         0,
         0,
+        0,
         "Asia/Seoul"),
     #catchup 설정 : catchup - 과거부터 시작할 때, 과거 빈 공간을 채워주는 기능
     catchup=False,
