@@ -15,7 +15,7 @@ from news_functions.get_news_score import get_news_score
     start_date=pendulum.datetime(
         2025,
         7,
-        17,
+        18,
         16,
         0,
         0,

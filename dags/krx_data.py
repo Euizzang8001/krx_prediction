@@ -16,7 +16,7 @@ from common_functions.predict_next_closing import predict_by_xgboost_model
     start_date=pendulum.datetime(
         2025,
         7,
-        17,
+        18,
         15,
         40,
         0,
