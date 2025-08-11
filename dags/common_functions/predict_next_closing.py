@@ -33,47 +33,21 @@ def predict_by_xgboost_model():
     aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
     aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
 
-    today = pendulum.now("Asia/Seoul")  # 오늘 날짜 선언
-    #today = pendulum.datetime(2025, 7, 11, 16, 30, 10) #test용
-    i = 1  # 주식 시장 기준으로 전날을 찾기 위한 indicator
-    yesterday = None  # 주식 시장 기준 전날 날짜의 pendulum 값
-    day_before_yesterday = None #주식 시장 기준 전전날 날짜
-    day_before_before_yesterday = None #주식 시장 기준 전전전날 날짜
-    while not yesterday or not day_before_yesterday:  # 전날을 찾을 때까지 반복문 실행
-        subtract_date = today.subtract(days=i)  # 오늘 날짜부터 i일 전의 날짜
-        if subtract_date.weekday() < 5:  # i일 전의 날이 주중이면 실행
-            if not yesterday:
-                yesterday = subtract_date #전날 값에 할당
-                i += 1
-                continue
-            elif not day_before_yesterday: #전전날 값이 없으면 전전날 값으로 설정
-                day_before_yesterday = subtract_date  # 전전날 값에 할당
-                i += 1
-                continue
-            elif not day_before_before_yesterday: #전전전날 값이 없으면 전전날 값으로 설정
-                day_before_before_yesterday = subtract_date  # 전전전날 값에 할당
-                i += 1
-                continue
-        i += 1  # 전날과 전전날을 아직 못 찾았으므로 i + 1
-
-    #trained_day: 이미 훈련이 끝마친 모델 날짜 / training_day: 뉴스 점수를 계속 업데이트하여 계속 훈련할 날짜
-    #predicting_day: 예측에 사용할 날짜(다음날 주가 변화율이 없는 최신 데이터)
-    trained_day, training_day, predicting_day = None, None, None
-
-    if (today.weekday() < 5 and today.hour <16) or today.weekday() >= 5 : #주식 시장 종료 이전 + 주중이거나 주말이라면 -> 예측할 종가 날짜: today, 예측에 사용될 날짜: yesterday,
-        # 뉴스 점수 없데이트할 날짜: day_before_yesterday, 구현된 최종 모델: day_before_before_yesterday
-        trained_day = day_before_before_yesterday
-        training_day = day_before_yesterday
-        predicting_day = yesterday
-    else: #주식 시장 종료 이후면 -> 예측할 종가 날짜: tomorrow, 예측에 사용될 날짜: today,
-        # 뉴스 점수 없데이트할 날짜: yesterday, 구현된 최종 모델: day_before_yesterday
-        trained_day = day_before_yesterday
-        training_day = yesterday
-        predicting_day = today
-
     pg_hook = PostgresHook(postgres_conn_id='krx_conn')  # postgresql 연결 훅
     conn = pg_hook.get_conn()  # 훅으로 postgresql 연결
     cur = conn.cursor()  # 커서 설정
+
+    # DB기준으로 저장된 가장 최근 3개의 날짜 가져오기
+    cur.execute("""
+            SELECT distinct(date)
+            FROM stocks 
+            ORDER BY date desc 
+            LIMIT 3;
+        """)
+    # select 결과 가져오기
+    dates = cur.fetchall()
+    # 가장 최근 날짜부터 predicting_day, training_day, trained_day로 선언
+    predicting_day, training_day, trained_day = dates[0][0], dates[1][0], dates[2][0]
 
     #s3 session 연결
     s3_client = boto3.client(
@@ -91,7 +65,7 @@ def predict_by_xgboost_model():
                 SELECT * FROM stocks
                 WHERE name = %s AND date = %s;
                 """,
-                (stock_name, predicting_day.strftime('%Y%m%d'))
+                (stock_name, predicting_day)
             )
             row = cur.fetchone()  # 마지막 결과 하나만 가져오기
 
@@ -120,7 +94,7 @@ def predict_by_xgboost_model():
                 SELECT closing FROM stocks
                 WHERE name = %s AND date = %s;
                 """,
-                (stock_name, predicting_day.strftime('%Y%m%d'))
+                (stock_name, predicting_day)
             )
             row = cur.fetchone()
             predicting_day_closing = float(row[0])
@@ -131,11 +105,11 @@ def predict_by_xgboost_model():
                     UPDATE stocks
                     SET predicted_closing = %s, predicted_closing_ratio = %s
                     WHERE name = %s AND date = %s;
-                """, ((100 + predict_result) / 100  * predicting_day_closing, predict_result, stock_name, predicting_day.strftime('%Y%m%d'))
+                """, ((100 + predict_result) / 100  * predicting_day_closing, predict_result, stock_name, predicting_day)
             )
 
-            print(f"{stock_name}의 {predicting_day.strftime('%Y%m%d')} 이후 예측된 종가", (100 + predict_result) / 100  * predicting_day_closing)
-            print(f"{stock_name}의 {predicting_day.strftime('%Y%m%d')} 이후 예측된 종가 변화율", predict_result)
+            print(f"{stock_name}의 {predicting_day} 이후 예측된 종가", (100 + predict_result) / 100  * predicting_day_closing)
+            print(f"{stock_name}의 {predicting_day} 이후 예측된 종가 변화율", predict_result)
 
         #DB 변경사항 저장
         conn.commit()
