@@ -1,6 +1,7 @@
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.sdk import task
+import holidays
 
 stocks = { #반도체 관련 주식 종목 dict
     "삼성전자": ["005930", "20130405"],
@@ -17,9 +18,17 @@ stocks = { #반도체 관련 주식 종목 dict
 
 @task
 def insert_krx_table(data): #새로 생성된 데이터를 추가하는 task
-    #오늘이 주말이라면 실행 안함
-    if data["today"].weekday() >= 5:
+    today = data["today"]
+
+    #holidays 라이브러리로 한국의 휴일 불러오기
+    kr_holidays = list(holidays.KR(years=today.year).keys())
+    revised_kr_holidays = [d.strftime("%Y%m%d") for d in kr_holidays]
+
+    # today가 주말 또는 휴일이라면, 실행 안함
+    if today.weekday() >= 5 or today.strftime("%Y%m%d") in revised_kr_holidays:
         return None
+
+
     pg_hook = PostgresHook(postgres_conn_id='krx_conn') #postgresql 연결 훅
     conn = pg_hook.get_conn() #훅으로 postgresql 연결
     cur = conn.cursor() #커서 설정

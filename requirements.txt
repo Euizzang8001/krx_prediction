@@ -10,3 +10,4 @@ openai
 pymongo
 apache-airflow-providers-mongo
 certifi
+holidays

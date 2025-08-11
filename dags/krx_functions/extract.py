@@ -1,6 +1,7 @@
 from pykrx import stock
 from airflow.sdk import task
 import pendulum
+import holidays
 
 stocks = { #반도체 관련 주식 종목 dict
     "삼성전자": ["005930", "20130405"],
@@ -21,8 +22,12 @@ def get_krx_data(): #pykrx 라이브러리로 오늘의 반도체 종목 종가�
     #today = pendulum.datetime(2025, 7, 15, 16, 30, 10)
     yesterday = None #주식 시장 기준 전날 날짜의 pendulum 값
 
-    #today가 주말이라면, 실행 안함
-    if today.weekday() >= 5:
+    #holidays 라이브러리로 한국의 휴일을 받아온 후, 현재 날짜와 비교
+    kr_holidays = list(holidays.KR(years=today.year).keys())
+    revised_kr_holidays = [d.strftime("%Y%m%d") for d in kr_holidays]
+
+    #today가 주말 또는 휴일이라면, 실행 안함
+    if today.weekday() >= 5 or today.strftime("%Y%m%d") in revised_kr_holidays:
         return {"today": today} #dict 반환
 
 
