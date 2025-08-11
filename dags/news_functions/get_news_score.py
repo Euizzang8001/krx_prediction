@@ -31,6 +31,18 @@ def get_news_score(data):
     conn = pg_hook.get_conn()  # 훅으로 postgresql 연결
     cur = conn.cursor()  # 커서 설정
 
+    # DB기준으로 저장된 가장 최근 3개의 날짜 가져오기
+    cur.execute("""
+                SELECT distinct(date)
+                FROM stocks 
+                ORDER BY date desc 
+                LIMIT 3;
+            """)
+    # select 결과 가져오기
+    dates = cur.fetchall()
+    # 가장 최근 날짜부터 predicting_day, training_day, trained_day로 선언
+    predicting_day, training_day, trained_day = dates[0][0], dates[1][0], dates[2][0]
+
     openai_api_key = os.getenv("OPENAI_API_KEY") #openai api key 가져오기
 
     client = OpenAI(
@@ -78,19 +90,6 @@ def get_news_score(data):
         #score_sum_list에 누적 뉴스 점수 합 계산
         score_sum_list = [a + b for a, b in zip(score_sum_list, score_list)]
 
-    today = pendulum.now("Asia/Seoul") #오늘의 시간 저장
-    #today = pendulum.datetime(2025, 7, 11, 16, 30, 10)
-    yesterday = None  # 주식 시장 기준 전날 날짜의 pendulum 값
-    i = 1 # 주식 시장 기준 전날 날짜를 구하기 위한 indicator설정
-    while not yesterday:  # 전날을 찾을 때까지 반복문 실행
-        subtract_date = today.subtract(days=i)  # 오늘 날짜부터 i일 전의 날짜
-        if subtract_date.weekday() < 5:  # i일 전의 날이 주중이면 실행
-            if not yesterday:
-                yesterday = subtract_date  # 전날 값에 할당
-                break
-        i += 1  # 전날을 아직 못 찾았으므로 i + 1
-
-    predicting_day = yesterday if (today.weekday() < 5 and today.hour <16) or today.weekday() >= 5 else today #16시가 넘었고, 주중이라면 -> 오늘 종가로 예측, 안 넘으면 -> 어제 종가로 오늘의 종가를 예측
     news_count = len(data['titles']) #이번 구간동안의 전체 뉴스의 수
 
     #각 종목 별로 누적합 된 뉴스 점수 및 뉴스의 수 업데이트
@@ -99,7 +98,7 @@ def get_news_score(data):
                 UPDATE stocks
                 SET news_score = ((news_score * news_num) + %s)/(news_num + %s) , news_num = news_num + %s
                 WHERE date = %s and name = %s
-            """, (news_score, news_count, news_count, predicting_day.strftime("%Y%m%d"), stock_name)
+            """, (news_score, news_count, news_count, predicting_day, stock_name)
         )
     #DB 변경 사항 커밋
     conn.commit()
