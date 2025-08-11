@@ -14,9 +14,9 @@ from news_functions.get_news_score import get_news_score
     #시작 날짜 설정
     start_date=pendulum.datetime(
         2025,
-        7,
-        18,
-        16,
+        8,
+        9,
+        1,
         0,
         0,
         0,

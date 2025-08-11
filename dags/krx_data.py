@@ -15,8 +15,8 @@ from common_functions.predict_next_closing import predict_by_xgboost_model
     #시작 날짜 설정
     start_date=pendulum.datetime(
         2025,
-        7,
-        18,
+        8,
+        9,
         15,
         40,
         0,
